@@ -824,21 +824,6 @@ function attachRealtimeListeners(pinsRef) {
   });
 }
 
-
-            // Listen for deleted pins
-            pinsRef.on('child_removed', (snapshot) => {
-                const pinId = snapshot.key;
-                delete pins[pinId];
-                
-                // Remove marker from map
-                const markerIndex = markers.findIndex(m => m.pinId === pinId);
-                if (markerIndex !== -1) {
-                    markers[markerIndex].setMap(null);
-                    markers.splice(markerIndex, 1);
-                }
-            });
-        }
-
         // Escape HTML to prevent XSS
         function escapeHtml(text) {
             const div = document.createElement('div');
