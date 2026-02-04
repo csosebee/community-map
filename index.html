@@ -752,36 +752,78 @@ const firebaseConfig = {
 
         // Load pins from Firebase
         function loadPins() {
-            if (!firebaseInitialized) {
-                console.error('Firebase not initialized');
-                return;
-            }
+  if (!firebaseInitialized) {
+    console.error('Firebase not initialized');
+    // Don’t leave the user stuck on “Loading…”
+    document.getElementById('loadingIndicator').style.display = 'none';
+    return;
+  }
 
-            document.getElementById('loadingIndicator').style.display = 'block';
+  const loadingEl = document.getElementById('loadingIndicator');
+  loadingEl.style.display = 'block';
 
-            const pinsRef = database.ref('pins');
-            
-            // Listen for new pins
-            pinsRef.on('child_added', (snapshot) => {
-                const pinId = snapshot.key;
-                const pin = snapshot.val();
-                pins[pinId] = pin;
-                createMarker(pinId, pin);
-                document.getElementById('loadingIndicator').style.display = 'none';
-            });
+  const pinsRef = database.ref('pins');
 
-            // Listen for updated pins (when comments are added)
-            pinsRef.on('child_changed', (snapshot) => {
-                const pinId = snapshot.key;
-                const pin = snapshot.val();
-                pins[pinId] = pin;
-                
-                // Update the marker's info window if it exists
-                const marker = markers.find(m => m.pinId === pinId);
-                if (marker && marker.infoWindow) {
-                    marker.infoWindow.setContent(createInfoWindowContent(pinId, pin));
-                }
-            });
+  // 1) One-time initial fetch to know when loading is "done"
+  pinsRef.once('value')
+    .then((snapshot) => {
+      // If there are no pins, this still resolves and we can hide the loader
+      if (snapshot.exists()) {
+        snapshot.forEach((child) => {
+          const pinId = child.key;
+          const pin = child.val();
+          pins[pinId] = pin;
+          createMarker(pinId, pin);
+        });
+      }
+      loadingEl.style.display = 'none';
+
+      // 2) After initial load, attach realtime listeners for updates
+      attachRealtimeListeners(pinsRef);
+    })
+    .catch((error) => {
+      console.error('Error loading pins:', error);
+      loadingEl.style.display = 'none';
+      alert('Unable to load pins (check database permissions/config).');
+    });
+}
+
+function attachRealtimeListeners(pinsRef) {
+  // New pins
+  pinsRef.on('child_added', (snapshot) => {
+    const pinId = snapshot.key;
+    if (pins[pinId]) return; // avoid duplicates (since we loaded initial pins already)
+
+    const pin = snapshot.val();
+    pins[pinId] = pin;
+    createMarker(pinId, pin);
+  });
+
+  // Updated pins (e.g., comments)
+  pinsRef.on('child_changed', (snapshot) => {
+    const pinId = snapshot.key;
+    const pin = snapshot.val();
+    pins[pinId] = pin;
+
+    const marker = markers.find(m => m.pinId === pinId);
+    if (marker && marker.infoWindow) {
+      marker.infoWindow.setContent(createInfoWindowContent(pinId, pin));
+    }
+  });
+
+  // Deleted pins
+  pinsRef.on('child_removed', (snapshot) => {
+    const pinId = snapshot.key;
+    delete pins[pinId];
+
+    const markerIndex = markers.findIndex(m => m.pinId === pinId);
+    if (markerIndex !== -1) {
+      markers[markerIndex].setMap(null);
+      markers.splice(markerIndex, 1);
+    }
+  });
+}
+
 
             // Listen for deleted pins
             pinsRef.on('child_removed', (snapshot) => {
