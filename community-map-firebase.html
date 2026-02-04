@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Margaret Community Master Plan Map</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .controls {
+            position: absolute;
+            top: 120px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 300px;
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+
+        .controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .controls label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .controls select,
+        .controls input,
+        .controls textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .controls textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .controls button {
+            width: 100%;
+            padding: 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background: #3367d6;
+        }
+
+        .controls button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .legend h4 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid #333;
+        }
+
+        .info-window {
+            max-width: 300px;
+        }
+
+        .info-window h3 {
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .info-window .category {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .info-window .description {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .info-window .author {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .info-window .comments-section {
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .info-window .comment {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-window .comment-author {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .info-window .comment-text {
+            color: #555;
+        }
+
+        .info-window .add-comment {
+            margin-top: 10px;
+        }
+
+        .info-window input,
+        .info-window textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .info-window textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .info-window button {
+            padding: 8px 16px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .info-window button:hover {
+            background: #3367d6;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 2000;
+            font-size: 16px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                transform: none;
+                padding: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .controls {
+                top: auto;
+                bottom: 20px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+
+            .legend {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingIndicator" class="loading" style="display: none;">Loading map...</div>
+
+    <div class="header">
+        <h1>Margaret Community Master Plan</h1>
+        <p>Help shape our community's future - click the map to add your ideas!</p>
+    </div>
+
+    <div class="controls">
+        <h3>Add Your Input</h3>
+        <p class="info-text">Click anywhere on the map to drop a pin, then fill out the details below.</p>
+        
+        <label for="category">Category</label>
+        <select id="category">
+            <option value="">Select a category...</option>
+            <option value="park">Park & Recreation</option>
+            <option value="traffic">Traffic & Transportation</option>
+            <option value="development">Development Idea</option>
+            <option value="safety">Safety Concern</option>
+            <option value="infrastructure">Infrastructure</option>
+            <option value="community">Community Space</option>
+            <option value="other">Other</option>
+        </select>
+
+        <label for="title">Title</label>
+        <input type="text" id="title" placeholder="Brief title for your idea...">
+
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Describe your idea or concern..."></textarea>
+
+        <label for="author">Your Name (optional)</label>
+        <input type="text" id="author" placeholder="Anonymous">
+
+        <button id="submitPin" disabled>Submit Pin</button>
+    </div>
+
+    <div class="legend">
+        <h4>Pin Categories</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4CAF50;"></div>
+            <span>Park & Recreation</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #FF9800;"></div>
+            <span>Traffic & Transportation</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #2196F3;"></div>
+            <span>Development Idea</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #F44336;"></div>
+            <span>Safety Concern</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #9C27B0;"></div>
+            <span>Infrastructure</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00BCD4;"></div>
+            <span>Community Space</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #607D8B;"></div>
+            <span>Other</span>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // ====================================================================
+        // FIREBASE CONFIGURATION - REPLACE WITH YOUR OWN CREDENTIALS
+        // ====================================================================
+        // Get these from: https://console.firebase.google.com/
+        // 1. Create a new project
+        // 2. Go to Project Settings > General
+        // 3. Scroll to "Your apps" and click Web app
+        // 4. Copy the firebaseConfig object here
+        
+        // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC4Bv0Jrbk9v37gFteaMx-RkVp5sEjAsC4",
+  authDomain: "margaret-community-map.firebaseapp.com",
+  databaseURL: "https://margaret-community-map-default-rtdb.firebaseio.com",
+  projectId: "margaret-community-map",
+  storageBucket: "margaret-community-map.firebasestorage.app",
+  messagingSenderId: "126857542313",
+  appId: "1:126857542313:web:5ebec2638fa4d56a7487b8"
+};
+        // Initialize Firebase
+        let database;
+        let firebaseInitialized = false;
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            firebaseInitialized = true;
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            alert('Database connection failed. Please check Firebase configuration.');
+        }
+
+        // ====================================================================
+        // GOOGLE MAPS CONFIGURATION
+        // ====================================================================
+        const MARGARET_AL = { lat: 33.6862, lng: -86.4772 };
+        const API_KEY = 'AIzaSyCBkL3QwsQZOZJ2NdftVweggzyi3o5fDrw';
+
+        // Category colors and styling
+        const CATEGORY_CONFIG = {
+            park: { color: '#4CAF50', label: 'Park & Recreation' },
+            traffic: { color: '#FF9800', label: 'Traffic & Transportation' },
+            development: { color: '#2196F3', label: 'Development Idea' },
+            safety: { color: '#F44336', label: 'Safety Concern' },
+            infrastructure: { color: '#9C27B0', label: 'Infrastructure' },
+            community: { color: '#00BCD4', label: 'Community Space' },
+            other: { color: '#607D8B', label: 'Other' }
+        };
+
+        // Global variables
+        let map;
+        let currentMarker = null;
+        let currentPosition = null;
+        let markers = [];
+        let pins = {};
+        let cityLimitsLayer = null;
+
+        // Initialize the map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: MARGARET_AL,
+                zoom: 14,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true,
+                zoomControl: true
+            });
+
+            // Load existing pins from Firebase
+            loadPins();
+
+            // Load city limits overlay
+            loadCityLimits();
+
+            // Add click listener to map
+            map.addListener('click', function(event) {
+                placeTemporaryMarker(event.latLng);
+            });
+
+            // Setup form controls
+            setupControls();
+        }
+
+        // Place a temporary marker when user clicks
+        function placeTemporaryMarker(latLng) {
+            if (currentMarker) {
+                currentMarker.setMap(null);
+            }
+
+            currentMarker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                animation: google.maps.Animation.DROP,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#4285f4',
+                    fillOpacity: 0.7,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                }
+            });
+
+            currentPosition = latLng;
+            document.getElementById('submitPin').disabled = false;
+
+            if (window.innerWidth <= 768) {
+                document.querySelector('.controls').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Setup form controls
+        function setupControls() {
+            document.getElementById('submitPin').addEventListener('click', function() {
+                const category = document.getElementById('category').value;
+                const title = document.getElementById('title').value.trim();
+                const description = document.getElementById('description').value.trim();
+                const author = document.getElementById('author').value.trim() || 'Anonymous';
+
+                if (!category) {
+                    alert('Please select a category');
+                    return;
+                }
+
+                if (!title) {
+                    alert('Please enter a title');
+                    return;
+                }
+
+                if (!description) {
+                    alert('Please enter a description');
+                    return;
+                }
+
+                if (!currentPosition) {
+                    alert('Please click on the map to place a pin');
+                    return;
+                }
+
+                // Show loading
+                document.getElementById('submitPin').disabled = true;
+                document.getElementById('submitPin').textContent = 'Saving...';
+
+                // Create pin object
+                const pin = {
+                    category: category,
+                    title: title,
+                    description: description,
+                    author: author,
+                    position: {
+                        lat: currentPosition.lat(),
+                        lng: currentPosition.lng()
+                    },
+                    timestamp: new Date().toISOString(),
+                    comments: {}
+                };
+
+                // Save to Firebase
+                savePin(pin);
+            });
+        }
+
+        // Save pin to Firebase
+        function savePin(pin) {
+            if (!firebaseInitialized) {
+                alert('Database not connected. Please check configuration.');
+                document.getElementById('submitPin').disabled = false;
+                document.getElementById('submitPin').textContent = 'Submit Pin';
+                return;
+            }
+
+            const newPinRef = database.ref('pins').push();
+            newPinRef.set(pin)
+                .then(() => {
+                    resetForm();
+                    alert('Thank you! Your input has been added to the map.');
+                })
+                .catch((error) => {
+                    console.error('Error saving pin:', error);
+                    alert('Error saving pin. Please try again.');
+                    document.getElementById('submitPin').disabled = false;
+                    document.getElementById('submitPin').textContent = 'Submit Pin';
+                });
+        }
+
+        // Create a marker for a pin
+        function createMarker(pinId, pin) {
+            const categoryConfig = CATEGORY_CONFIG[pin.category];
+            
+            const marker = new google.maps.Marker({
+                position: pin.position,
+                map: map,
+                title: pin.title,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: categoryConfig.color,
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                }
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: createInfoWindowContent(pinId, pin)
+            });
+
+            marker.addListener('click', function() {
+                markers.forEach(m => {
+                    if (m.infoWindow) {
+                        m.infoWindow.close();
+                    }
+                });
+                infoWindow.open(map, marker);
+            });
+
+            marker.pinId = pinId;
+            marker.infoWindow = infoWindow;
+            markers.push(marker);
+
+            return marker;
+        }
+
+        // Create info window HTML content
+        function createInfoWindowContent(pinId, pin) {
+            const categoryConfig = CATEGORY_CONFIG[pin.category];
+            const date = new Date(pin.timestamp).toLocaleDateString();
+
+            let html = `
+                <div class="info-window">
+                    <h3>${escapeHtml(pin.title)}</h3>
+                    <div class="category" style="background: ${categoryConfig.color};">
+                        ${categoryConfig.label}
+                    </div>
+                    <div class="description">${escapeHtml(pin.description)}</div>
+                    <div class="author">Posted by ${escapeHtml(pin.author)} on ${date}</div>
+            `;
+
+            // Add comments section
+            if (pin.comments && Object.keys(pin.comments).length > 0) {
+                html += '<div class="comments-section"><h4 style="margin-bottom: 10px; font-size: 14px;">Comments:</h4>';
+                Object.values(pin.comments).forEach(comment => {
+                    const commentDate = new Date(comment.timestamp).toLocaleDateString();
+                    html += `
+                        <div class="comment">
+                            <div class="comment-author">${escapeHtml(comment.author)} - ${commentDate}</div>
+                            <div class="comment-text">${escapeHtml(comment.text)}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            // Add comment form
+            html += `
+                <div class="add-comment">
+                    <h4 style="margin-bottom: 8px; font-size: 14px;">Add a Comment:</h4>
+                    <input type="text" id="commentAuthor-${pinId}" placeholder="Your name (optional)">
+                    <textarea id="commentText-${pinId}" placeholder="Your comment..."></textarea>
+                    <button onclick="addComment('${pinId}')">Add Comment</button>
+                </div>
+            `;
+
+            html += '</div>';
+            return html;
+        }
+
+        // Add comment to a pin
+        window.addComment = function(pinId) {
+            const authorInput = document.getElementById(`commentAuthor-${pinId}`);
+            const textInput = document.getElementById(`commentText-${pinId}`);
+
+            const author = authorInput.value.trim() || 'Anonymous';
+            const text = textInput.value.trim();
+
+            if (!text) {
+                alert('Please enter a comment');
+                return;
+            }
+
+            if (!firebaseInitialized) {
+                alert('Database not connected.');
+                return;
+            }
+
+            const comment = {
+                author: author,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+
+            // Save comment to Firebase
+            database.ref(`pins/${pinId}/comments`).push(comment)
+                .then(() => {
+                    authorInput.value = '';
+                    textInput.value = '';
+                    alert('Comment added!');
+                })
+                .catch((error) => {
+                    console.error('Error adding comment:', error);
+                    alert('Error adding comment. Please try again.');
+                });
+        };
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('category').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('author').value = '';
+            document.getElementById('submitPin').disabled = true;
+            document.getElementById('submitPin').textContent = 'Submit Pin';
+
+            if (currentMarker) {
+                currentMarker.setMap(null);
+                currentMarker = null;
+            }
+
+            currentPosition = null;
+        }
+
+        // Load city limits
+        function loadCityLimits() {
+            try {
+                const cityBoundary = [
+                    {lat: 33.66404333719904, lng: -86.48071079745941},
+                    {lat: 33.66320333702226, lng: -86.48071079741318},
+                    {lat: 33.66319733701613, lng: -86.48083779744887},
+                    {lat: 33.66317333698823, lng: -86.48143179761612},
+                    {lat: 33.66267533688394, lng: -86.48141879758505},
+                    {lat: 33.66258633675705, lng: -86.48422779837732},
+                    {lat: 33.66253533668456, lng: -86.48583179882972},
+                    {lat: 33.66247933660392, lng: -86.48762079933429},
+                    {lat: 33.66240733648593, lng: -86.4902918000883},
+                    {lat: 33.66317933664781, lng: -86.49030580013482},
+                    {lat: 33.66388833680534, lng: -86.49008880011223},
+                    {lat: 33.66412433685954, lng: -86.48997080009177},
+                    {lat: 33.66461933697454, lng: -86.489688800039},
+                    {lat: 33.66492733704871, lng: -86.48944579998701},
+                    {lat: 33.66529633713468, lng: -86.48922879994572},
+                    {lat: 33.66624733736035, lng: -86.48856479980969},
+                    {lat: 33.66637933739392, lng: -86.48841379977411},
+                    {lat: 33.66641233740541, lng: -86.48829579974243},
+                    {lat: 33.66635833741939, lng: -86.48763779955276},
+                    {lat: 33.66639133743237, lng: -86.48748079951002},
+                    {lat: 33.66667133750069, lng: -86.48723679945616},
+                    {lat: 33.66699633757108, lng: -86.48718479945933},
+                    {lat: 33.66704533758391, lng: -86.48711879944329},
+                    {lat: 33.6671773376256, lng: -86.48675779934813},
+                    {lat: 33.66727133765045, lng: -86.48662579931583},
+                    {lat: 33.66737033767404, lng: -86.48655379930085},
+                    {lat: 33.66754033771258, lng: -86.48648179928976},
+                    {lat: 33.66792533779741, lng: -86.48638279928292},
+                    {lat: 33.66812333784008, lng: -86.48635679928645},
+                    {lat: 33.66828333787626, lng: -86.48629079927652},
+                    {lat: 33.66841533791135, lng: -86.48610079922986},
+                    {lat: 33.66850733795073, lng: -86.48558079908737},
+                    {lat: 33.66657933754609, lng: -86.48555479897378},
+                    {lat: 33.66657933759553, lng: -86.48427079860939},
+                    {lat: 33.66657933768886, lng: -86.48184779792174},
+                    {lat: 33.66658033773252, lng: -86.48071879760138},
+                    {lat: 33.66632033767756, lng: -86.48072579758907},
+                    {lat: 33.66585533757988, lng: -86.48072179756232},
+                    {lat: 33.66490133737939, lng: -86.48071579750808}
+                ];
+
+                cityLimitsLayer = new google.maps.Polygon({
+                    paths: cityBoundary,
+                    strokeColor: '#ff0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 3,
+                    fillColor: '#0000ff',
+                    fillOpacity: 0.2,
+                    map: map
+                });
+
+                const infoWindow = new google.maps.InfoWindow();
+                cityLimitsLayer.addListener('click', function(event) {
+                    infoWindow.setContent('<div style="padding: 10px;"><h3 style="margin: 0 0 5px 0;">Margaret City Limits</h3><p style="margin: 0; color: #666;">Official city boundary as of 2020</p></div>');
+                    infoWindow.setPosition(event.latLng);
+                    infoWindow.open(map);
+                });
+            } catch (error) {
+                console.error('Error loading city limits:', error);
+            }
+        }
+
+        // Load pins from Firebase
+        function loadPins() {
+            if (!firebaseInitialized) {
+                console.error('Firebase not initialized');
+                return;
+            }
+
+            document.getElementById('loadingIndicator').style.display = 'block';
+
+            const pinsRef = database.ref('pins');
+            
+            // Listen for new pins
+            pinsRef.on('child_added', (snapshot) => {
+                const pinId = snapshot.key;
+                const pin = snapshot.val();
+                pins[pinId] = pin;
+                createMarker(pinId, pin);
+                document.getElementById('loadingIndicator').style.display = 'none';
+            });
+
+            // Listen for updated pins (when comments are added)
+            pinsRef.on('child_changed', (snapshot) => {
+                const pinId = snapshot.key;
+                const pin = snapshot.val();
+                pins[pinId] = pin;
+                
+                // Update the marker's info window if it exists
+                const marker = markers.find(m => m.pinId === pinId);
+                if (marker && marker.infoWindow) {
+                    marker.infoWindow.setContent(createInfoWindowContent(pinId, pin));
+                }
+            });
+
+            // Listen for deleted pins
+            pinsRef.on('child_removed', (snapshot) => {
+                const pinId = snapshot.key;
+                delete pins[pinId];
+                
+                // Remove marker from map
+                const markerIndex = markers.findIndex(m => m.pinId === pinId);
+                if (markerIndex !== -1) {
+                    markers[markerIndex].setMap(null);
+                    markers.splice(markerIndex, 1);
+                }
+            });
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load Google Maps script
+        function loadGoogleMaps() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        // Initialize when page loads
+        loadGoogleMaps();
+    </script>
+</body>
+</html>
